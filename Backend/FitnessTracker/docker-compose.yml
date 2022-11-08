@@ -5,13 +5,6 @@ services:
 # This is the development build script for the API 
 # Note, this script will not run migrations automatically
 # ------ ------------------------- ----
-  api: 
-    build: ./Docker/
-    command: python3 -m manage runserver 0.0.0.0:8080
-    volumes: 
-      - .:/backend
-    ports:
-      - 8080:8080
   db:
     image: postgres:13
     volumes:
@@ -20,5 +13,23 @@ services:
       - "POSTGRES_HOST_AUTH_METHOD=trust"
     ports:
       - 5432:5432
+    networks:
+      - djangonetwork
+  api: 
+    build: ./Docker/
+    depends_on:
+      - db
+    links:
+      - db:db
+    networks:
+      - djangonetwork
+    command: python3 -m manage runserver 0.0.0.0:8080
+    volumes: 
+      - .:/backend
+    ports:
+      - 8080:8080
+networks:
+  djangonetwork:
+    driver: bridge
 volumes:
   postgres_data:
