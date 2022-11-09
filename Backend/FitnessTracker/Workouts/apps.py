@@ -25,8 +25,12 @@ class ConfigureDB(AppConfig):
             """
                 DROP TABLE IF EXISTS Plans_Workouts;
                 DROP TABLE IF EXISTS Sessions_SensorData;
+                DROP TABLE IF EXISTS ReportItems;
+                DROP TABLE IF EXISTS Reports;
                 DROP TABLE IF EXISTS SensorData;
-                DROP TABLE IF EXISTS Sessions;
+                DROP TABLE IF EXISTS Sessions CASCADE;
+                DROP TABLE IF EXISTS WorkingSets CASCADE;
+                DROP TABLE IF EXISTS Sets;
                 DROP TABLE IF EXISTS Workouts;
                 DROP TABLE IF EXISTS Plans;
                 DROP TABLE IF EXISTS Users;
@@ -63,6 +67,20 @@ class ConfigureDB(AppConfig):
                     w_isPrivate BOOLEAN DEFAULT False NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS Sets (
+                    s_setID SERIAL PRIMARY KEY NOT NULL,
+                    s_weight FLOAT DEFAULT 0.0 NOT NULL,
+                    s_reps INT DEFAULT 0 NOT NULL,
+                    s_workoutID INT REFERENCES Workouts ( w_workoutID )
+                );
+
+                CREATE TABLE IF NOT EXISTS WorkingSets (
+                    ws_workingSetID SERIAL PRIMARY KEY NOT NULL,
+                    ws_setCount INT DEFAULT 0 NOT NULL,
+                    ws_setID INT REFERENCES Sets ( s_setID )
+                );
+
+
                 CREATE TABLE IF NOT EXISTS Sessions (
                     s_sessionID SERIAL PRIMARY KEY NOT NULL,
                     s_date DATE NOT NULL,
@@ -81,14 +99,19 @@ class ConfigureDB(AppConfig):
                 CREATE TABLE IF NOT EXISTS Reports(
                     r_reportID SERIAL PRIMARY KEY NOT NULL,
                     r_generatedDate DATE DEFAULT NOW() NOT NULL,
-                    r_startDate DATE DEFAULT NOT NULL,
-                    r_endDate DATAE DEFAULT NOT NULL,
+                    r_startDate DATE NOT NULL,
+                    r_endDate DATE NOT NULL,
                     r_userID INT REFERENCES Users (u_userID)
                 );
                 
                 CREATE TABLE IF NOT EXISTS ReportItems(
                     ri_reportItemID SERIAL PRIMARY KEY NOT NULL,
-                )
+                    ri_maxSet INT REFERENCES Sets ( s_setID ),
+                    ri_minSet INT REFERENCES Sets ( s_setID ),
+                    ri_averageSet INT REFERENCES Sets ( s_setID ),
+                    ri_workoutID INT REFERENCES Workouts ( w_workoutID )
+                );
+
                 CREATE TABLE IF NOT EXISTS Plans_Workouts (
                     pw_planID INT REFERENCES Plans ( p_planID ),
                     pw_workoutID INT REFERENCES Workouts ( w_workoutID )
@@ -97,6 +120,11 @@ class ConfigureDB(AppConfig):
                 CREATE TABLE IF NOT EXISTS Sessions_SensorData (
                     ssd_sessionID INT REFERENCES Sessions ( s_sessionID ),
                     ssd_sensorDataID INT REFERENCES SensorData ( sd_sensorDataID )
+                );
+
+                CREATE TABLE IF NOT EXISTS Sessions_WorkingSets (
+                    sws_sessionID INT REFERENCES Sessions ( s_sessionID ),
+                    sws_workingSetID INT REFERENCES WorkingSets ( ws_workingSetID )
                 );
                 """
             )
