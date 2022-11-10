@@ -153,17 +153,23 @@ class ConfigureDB(AppConfig):
             )
             userCount += 1
 
-        # a user can have a plan for each user in DB giver them a plan
+        # insert data into workouts
         connection.execute(
-            """
-                INSERT INTO Plans (
-                    p_planName, 
-                    p_userID
-                )
+            f"""
+                INSERT INTO Workouts (w_workoutName, w_mainMuscleGroup, w_minorMuscleGroup, w_equipment, w_description, w_level, w_images)
                 VALUES (
-                    
-                );
+                    'Seated-Row Workout{userCount}',
+                    'Back{userCount}',
+                    'Upper Back{userCount}',
+                    'Row Machine{userCount}',
+                    'Extended Pull Back until arms are at 90 degree angle to legs{userCount}',
+                    'Easy Level{userCount}',
+                    'fshbfla',
+                    '
+                )
             """
         )
+        userCount += 1
+        
         connection.db.commit()
         

@@ -1,21 +1,21 @@
-CREATE TABLE User (
+CREATE TABLE Users (
     u_userID SERIAL PRIMARY KEY NOT NULL,
     u_firstName TEXT NOT NULL,
     u_lastName TEXT NOT NULL
 );
 
-CREATE TABLE Plan (
+CREATE TABLE Plans (
     p_planID SERIAL PRIMARY KEY NOT NULL,
     p_planName TEXT NOT NULL,
-    p_userID INT REFERENCES User ( u_userID )
+    p_userID INT REFERENCES Users ( u_userID )
 );
 
-CREATE TABLE Plan_Workout (
-    pw_planID INT REFERENCES Plan ( p_planID )
+CREATE TABLE Plans_Workout (
+    pw_planID INT REFERENCES Plans ( p_planID )
     pw_workoutID INT REFERENCES Workout ( w_workoutID )
 );
 
-CREATE TABLE Workout (
+CREATE TABLE Workouts (
     w_workoutID SERIAL PRIMARY KEY NOT NULL,
     w_workoutName TEXT NOT NULL,
     w_mainMuscleGroup TEXT,
