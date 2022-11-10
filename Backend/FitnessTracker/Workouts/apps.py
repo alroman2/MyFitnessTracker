@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 from django.db import connection
-
+import random
 class WorkoutsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'Workouts'
@@ -86,7 +86,8 @@ class ConfigureDB(AppConfig):
                     s_sessionID SERIAL PRIMARY KEY NOT NULL,
                     s_date DATE NOT NULL,
                     s_startTime TIME NOT NULL,
-                    s_endTime TIME NOT NULL
+                    s_endTime TIME NOT NULL,
+                    s_userID INT REFERENCES Users ( u_userID )
                 );
 
                 CREATE TABLE IF NOT EXISTS SensorData(
@@ -154,16 +155,82 @@ class ConfigureDB(AppConfig):
             userCount += 1
 
         # a user can have a plan for each user in DB giver them a plan
+        
+        for i in range(1,21):
+            connection.execute(
+               f"""
+                    INSERT INTO Plans (
+                        p_planName, 
+                        p_userID
+                    )
+                    VALUES (
+                        'chest_day',
+                        {i}
+                    );
+                """
+            )
+        
+        # each user has logged into app and recorded 1 gym session
         connection.execute(
-            """
-                INSERT INTO Plans (
-                    p_planName, 
-                    p_userID
-                )
-                VALUES (
-                    
-                );
+            f"""
+                SELECT u_userID FROM Users;
             """
         )
+
+        all_users = connection.fetchall()
+       
+        index = 0
+        for id in (all_users):
+            connection.execute(
+                f"""
+                    INSERT INTO Sessions (
+                        s_date,
+                        s_startTime ,
+                        s_endTime ,
+                        s_userID 
+                    )
+                    VALUES (
+                        CURRENT_DATE,
+                        '02:03:04',
+                        '03:03:04',
+                        {all_users[index][0]}
+                    )
+                    RETURNING s_sessionID;
+                """
+            )
+            
+            index += 1
+
+        # for each gym session create 1 sensor data input 
+
+        connection.execute(
+            """
+                SELECT s_sessionID FROM Sessions;
+            """
+        )
+
+        all_sessions = connection.fetchall()
+
+        index = 0
+        for id in all_sessions:
+            connection.execute(
+                f"""
+                    INSERT INTO SensorData(
+                    sd_minHeartRate,
+                    sd_maxHeartRate,
+                    sd_averageHeartRate,
+                    sd_steps
+                    )
+                    VALUES (
+                        {random.randrange(75,100)}
+                        {random.randrange(115,200)}
+                        {random.randrange(100,115)}
+                        {random.random(200, 1000)}
+                    );
+                """
+            )
+            index += 1
+            
+
         connection.db.commit()
         
