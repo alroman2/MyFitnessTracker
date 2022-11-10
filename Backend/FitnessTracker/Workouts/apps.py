@@ -64,7 +64,7 @@ class ConfigureDB(AppConfig):
                     w_equipment TEXT,
                     w_description TEXT,
                     w_level TEXT,
-                    w_images TEXT [],
+                    w_images TEXT,
                     w_isPrivate BOOLEAN DEFAULT False NOT NULL
                 );
 
@@ -150,6 +150,22 @@ class ConfigureDB(AppConfig):
                         'lastname{userCount}'
                     );
                     
+                """
+            )
+            userCount += 1
+            # insert data into workouts
+            connection.execute(
+                f"""
+                    INSERT INTO Workouts (w_workoutName, w_mainMuscleGroup, w_minorMuscleGroup, w_equipment, w_description, w_level, w_images)
+                    VALUES (
+                        'Seated-Row Workout{userCount}',
+                        'Back{userCount}',
+                        'Upper Back{userCount}',
+                        'Row Machine{userCount}',
+                        'Extended Pull Back until arms are at 90 degree angle to legs{userCount}',
+                        'Easy Level{userCount}',
+                        'image'
+                    );
                 """
             )
             userCount += 1
