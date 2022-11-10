@@ -60,6 +60,7 @@ class ConfigureDB(AppConfig):
                     w_workoutID SERIAL PRIMARY KEY NOT NULL,
                     w_workoutName TEXT NOT NULL,
                     w_mainMuscleGroup TEXT,
+                    w_minorMuscleGroup TEXT,
                     w_equipment TEXT,
                     w_description TEXT,
                     w_level TEXT,
@@ -129,4 +130,40 @@ class ConfigureDB(AppConfig):
                 """
             )
             cursor.db.commit()
+
+
+    # we have now created database and now we can fill in some data
+    with connection.cursor() as connection:
+        #write insert statements here
+
+        #example lets insert 20 users
+        print("filling tables...")
+        userCount = 0
+        for i in range (0, 20):
+            connection.execute (
+                f"""
+                    INSERT INTO Users (u_image, u_firstName, u_lastName)
+                    VALUES (
+                        'fdsdfsd',
+                        'user{userCount}',
+                        'lastname{userCount}'
+                    );
+                    
+                """
+            )
+            userCount += 1
+
+        # a user can have a plan for each user in DB giver them a plan
+        connection.execute(
+            """
+                INSERT INTO Plans (
+                    p_planName, 
+                    p_userID
+                )
+                VALUES (
+                    
+                );
+            """
+        )
+        connection.db.commit()
         
