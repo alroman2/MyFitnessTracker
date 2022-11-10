@@ -64,7 +64,7 @@ class ConfigureDB(AppConfig):
                     w_equipment TEXT,
                     w_description TEXT,
                     w_level TEXT,
-                    w_images TEXT [],
+                    w_images TEXT,
                     w_isPrivate BOOLEAN DEFAULT False NOT NULL
                 );
 
@@ -164,9 +164,8 @@ class ConfigureDB(AppConfig):
                     'Row Machine{userCount}',
                     'Extended Pull Back until arms are at 90 degree angle to legs{userCount}',
                     'Easy Level{userCount}',
-                    'fshbfla',
-                    '
-                )
+                    'image'
+                );
             """
         )
         userCount += 1
