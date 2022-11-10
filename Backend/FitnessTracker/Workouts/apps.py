@@ -238,10 +238,10 @@ class ConfigureDB(AppConfig):
                     sd_steps
                     )
                     VALUES (
-                        {random.randrange(75,100)}
-                        {random.randrange(115,200)}
-                        {random.randrange(100,115)}
-                        {random.random(200, 1000)}
+                        {random.randrange(75,100)},
+                        {random.randrange(115,200)},
+                        {random.randrange(100,115)},
+                        {random.randrange(200, 1000)}
                     );
                 """
             )
