@@ -46,6 +46,7 @@ class ConfigureDB(AppConfig):
                 CREATE TABLE IF NOT EXISTS Users (
                     u_userID SERIAL PRIMARY KEY NOT NULL,
                     u_image TEXT,
+                    u_email TEXT NOT NULL,
                     u_firstName TEXT NOT NULL,
                     u_lastName TEXT NOT NULL
                 );
@@ -121,7 +122,8 @@ class ConfigureDB(AppConfig):
 
                 CREATE TABLE IF NOT EXISTS Sessions_SensorData (
                     ssd_sessionID INT REFERENCES Sessions ( s_sessionID ),
-                    ssd_sensorDataID INT REFERENCES SensorData ( sd_sensorDataID )
+                    ssd_sensorDataID INT REFERENCES SensorData ( sd_sensorDataID ),
+                    ssd_userID INT REFERENCES Users ( u_userID )
                 );
 
                 CREATE TABLE IF NOT EXISTS Sessions_WorkingSets (
@@ -143,9 +145,10 @@ class ConfigureDB(AppConfig):
         for i in range (0, 20):
             connection.execute (
                 f"""
-                    INSERT INTO Users (u_image, u_firstName, u_lastName)
+                    INSERT INTO Users (u_image, u_email, u_firstName, u_lastName)
                     VALUES (
                         'fdsdfsd',
+                        'user@{userCount}.com',
                         'user{userCount}',
                         'lastname{userCount}'
                     );
