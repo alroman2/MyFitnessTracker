@@ -95,7 +95,8 @@ class ConfigureDB(AppConfig):
                     sd_minHeartRate FLOAT DEFAULT 0.0,
                     sd_maxHeartRate FLOAT DEFAULT 0.0,
                     sd_averageHeartRate FLOAT DEFAULT 0.0,
-                    sd_steps INT DEFAULT 0
+                    sd_steps INT DEFAULT 0,
+                    s_userID INT REFERENCES Users ( u_userID )
                 );
 
                 CREATE TABLE IF NOT EXISTS Reports(
@@ -171,7 +172,6 @@ class ConfigureDB(AppConfig):
             userCount += 1
 
         # a user can have a plan for each user in DB giver them a plan
-        
         for i in range(1,21):
             connection.execute(
                f"""
@@ -185,6 +185,16 @@ class ConfigureDB(AppConfig):
                     );
                 """
             )
+            
+        # for each plan give it one workout in the plans_workouts table \
+        connection.execute(
+            """
+            SELECT p_planID FROM Plans;
+            """
+        )
+        
+        all_plans = connection.fetchall()
+        
         
         # each user has logged into app and recorded 1 gym session
         connection.execute(
@@ -194,6 +204,24 @@ class ConfigureDB(AppConfig):
         )
 
         all_users = connection.fetchall()
+        
+        index = 0 
+        for id in (all_users):
+            connection.execute(
+                f"""
+                INSERT INTO Reports (
+                    r_startDate,
+                    r_endDate,
+                    r_userID
+                    )
+                    VALUES (
+                        '2022-10-10',
+                        '2022-11-10',
+                        {all_users[index][0]}
+                    );
+                """
+            )
+            index+= 1
        
         index = 0
         for id in (all_users):
@@ -217,16 +245,9 @@ class ConfigureDB(AppConfig):
             
             index += 1
 
-        # for each gym session create 1 sensor data input 
-
-        connection.execute(
-            """
-                SELECT s_sessionID FROM Sessions;
-            """
-        )
-
         all_sessions = connection.fetchall()
-
+        
+    # for each gym session create 1 sensor data input 
         index = 0
         for id in all_sessions:
             connection.execute(
@@ -235,18 +256,36 @@ class ConfigureDB(AppConfig):
                     sd_minHeartRate,
                     sd_maxHeartRate,
                     sd_averageHeartRate,
-                    sd_steps
+                    sd_steps,
+                    sd_userID
                     )
                     VALUES (
                         {random.randrange(75,100)},
                         {random.randrange(115,200)},
                         {random.randrange(100,115)},
-                        {random.randrange(200, 1000)}
+                        {random.randrange(200, 1000)},
+                        {all_users[i][0]}
                     );
                 """
             )
             index += 1
-            
-
+        
+        connection.execute(
+            f"""
+                SELECT s_sessionID, sd_sensorDataID FROM Sessions, SensorData
+                WHERE sd_userID = s_userID;
+            """
+        )
+        
+        result = connection.fetchall()
+        index =0
+        for tuple in result:
+            connection.execute(
+             f""" 
+             INSERT INTO plans_workouts VALUES ({tuple[index][0]}, {pw_workoutID[index][1]});
+             """
+            )
+        index +=1
+        
         connection.db.commit()
         
