@@ -18,6 +18,7 @@ RUN pip install gunicorn==20.1.0
 RUN pip install sqlparse==0.4.2
 RUN pip install psycopg2-binary==2.9.3
 RUN pip install tzdata
+RUN pip install beautifulsoup4
 
 RUN apt install -y git
 

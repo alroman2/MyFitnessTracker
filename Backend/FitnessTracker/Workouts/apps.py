@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 from django.db import connection
 import random
+from .Scraper import Scraper
 class WorkoutsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'Workouts'
@@ -18,6 +19,10 @@ class ConfigureDB(AppConfig):
     """
     
     """
+
+    # start getting all workout data
+    #scraper = Scraper()
+    #scraper.getData()
 
     # Drop All Tables - comment the portion below to persist data
     with connection.cursor() as cursor:
@@ -64,7 +69,7 @@ class ConfigureDB(AppConfig):
                     w_minorMuscleGroup TEXT,
                     w_equipment TEXT,
                     w_description TEXT,
-                    w_level TEXT,
+                    w_level TEXT DEFAULT 'Basic',
                     w_images TEXT,
                     w_isPrivate BOOLEAN DEFAULT False NOT NULL
                 );
@@ -143,7 +148,7 @@ class ConfigureDB(AppConfig):
         #example lets insert 20 users
         print("filling tables...")
         userCount = 0
-        for i in range (0, 20):
+        for i in range (0, 1000):
             connection.execute (
                 f"""
                     INSERT INTO Users (u_image, u_email, u_firstName, u_lastName)
@@ -158,137 +163,179 @@ class ConfigureDB(AppConfig):
             )
             userCount += 1
             # insert data into workouts
-            connection.execute(
-                f"""
-                    INSERT INTO Workouts (w_workoutName, w_mainMuscleGroup, w_minorMuscleGroup, w_equipment, w_description, w_level, w_images)
-                    VALUES (
-                        'Seated-Row Workout{userCount}',
-                        'Back{userCount}',
-                        'Upper Back{userCount}',
-                        'Row Machine{userCount}',
-                        'Extended Pull Back until arms are at 90 degree angle to legs{userCount}',
-                        'Easy Level{userCount}',
-                        'image'
-                    );
-                """
-            )
             userCount += 1
 
         # a user can have a plan for each user in DB giver them a plan
-        for i in range(1,21):
-            connection.execute(
-               f"""
-                    INSERT INTO Plans (
-                        p_planName, 
-                        p_userID
-                    )
-                    VALUES (
-                        'chest_day',
-                        {i}
-                    );
-                """
-            )
-            
-        # for each plan give it one workout in the plans_workouts table \
-        connection.execute(
-            """
-            SELECT p_planID FROM Plans;
-            """
-        )
-        
-        all_plans = connection.fetchall()
         
         
-        # each user has logged into app and recorded 1 gym session
-        connection.execute(
-            f"""
-                SELECT u_userID FROM Users;
-            """
-        )
+        # # each user has logged into app and recorded 1 gym session
+        # connection.execute(
+        #     f"""
+        #         SELECT u_userID FROM Users;
+        #     """
+        # )
 
-        all_users = connection.fetchall()
-        
-        index = 0 
-        for id in (all_users):
-            connection.execute(
-                f"""
-                INSERT INTO Reports (
-                    r_startDate,
-                    r_endDate,
-                    r_userID
-                    )
-                    VALUES (
-                        '2022-10-10',
-                        '2022-11-10',
-                        {all_users[index][0]}
-                    );
-                """
-            )
-            index+= 1
-       
-        index = 0
-        for id in (all_users):
-            connection.execute(
-                f"""
-                    INSERT INTO Sessions (
-                        s_date,
-                        s_startTime ,
-                        s_endTime ,
-                        s_userID 
-                    )
-                    VALUES (
-                        CURRENT_DATE,
-                        '02:03:04',
-                        '03:03:04',
-                        {all_users[index][0]}
-                    )
-                    RETURNING s_sessionID;
-                """
-            )
-            
-            index += 1
+        # all_users = connection.fetchall()
+        # # make a plan for each user
 
-        all_sessions = connection.fetchall()
-        
-    # for each gym session create 1 sensor data input 
-        index = 0
-        for id in all_sessions:
-            connection.execute(
-                f"""
-                    INSERT INTO SensorData(
-                    sd_minHeartRate,
-                    sd_maxHeartRate,
-                    sd_averageHeartRate,
-                    sd_steps,
-                    sd_userID
-                    )
-                    VALUES (
-                        {random.randrange(75,100)},
-                        {random.randrange(115,200)},
-                        {random.randrange(100,115)},
-                        {random.randrange(200, 1000)},
-                        {all_users[i][0]}
-                    );
-                """
-            )
-            index += 1
-        
-        connection.execute(
-            f"""
-                SELECT s_sessionID, sd_sensorDataID FROM Sessions, SensorData
-                WHERE sd_userID = s_userID;
-            """
-        )
-        
-        result = connection.fetchall()
-        index =0
-        for tuple in result:
-            connection.execute(
-             f""" 
-             INSERT INTO plans_workouts VALUES ({tuple[index][0]}, {pw_workoutID[index][1]});
-             """
-            )
-        index +=1
-        
+        # # make report for each user
+        # index = 0 
+        # for id in (all_users):
+        #     connection.execute(
+        #         f"""
+        #                 INSERT INTO Plans (
+        #                     p_planName, 
+        #                     p_userID
+        #                 )
+        #                 VALUES (
+        #                     'chest_day',
+        #                     {all_users[index][0]}
+        #                 );
+        #             """
+        #         )
+        #     connection.execute(
+        #         f"""
+        #         INSERT INTO Reports (
+        #             r_startDate,
+        #             r_endDate,
+        #             r_userID
+        #             )
+        #             VALUES (
+        #                 '2022-10-10',
+        #                 '2022-11-10',
+        #                 {all_users[index][0]}
+        #             );
+        #         """
+        #     )
+        #     index+= 1
+        # # create a session for each user
+        # index = 0
+        # for id in (all_users):
+        #     connection.execute(
+        #         f"""
+        #             INSERT INTO Sessions (
+        #                 s_date,
+        #                 s_startTime ,
+        #                 s_endTime ,
+        #                 s_userID 
+        #             )
+        #             VALUES (
+        #                 CURRENT_DATE,
+        #                 '02:03:04',
+        #                 '03:03:04',
+        #                 {all_users[index][0]}
+        #             )
+        #             RETURNING s_sessionID;
+        #         """
+        #     )
+
+        #     session_id = connection.fetchone()
+
+        #     connection.execute(
+        #         f"""
+        #             INSERT INTO SensorData(
+        #             sd_minHeartRate,
+        #             sd_maxHeartRate,
+        #             sd_averageHeartRate,
+        #             sd_steps
+        #             )
+        #             VALUES (
+        #                 {random.randrange(75,100)},
+        #                 {random.randrange(115,200)},
+        #                 {random.randrange(100,115)},
+        #                 {random.randrange(200, 1000)}
+        #             )
+        #             RETURNING sd_sensorDataID
+        #         """
+        #     )
+            
+        #     sensor_data_id = connection.fetchone()
+        #     connection.execute(
+        #             f"""
+        #                 INSERT INTO Sessions_SensorData (
+        #                     ssd_sessionID,
+        #                     ssd_sensorDataID,
+        #                     ssd_userID
+        #                 )
+        #                 VALUES (
+        #                     {session_id[0]},
+        #                     {sensor_data_id[0]},
+        #                     {all_users[index][0]}
+        #                 )
+        #             """
+        #         )
+        #     index += 1
+
+        # # for each session give it  a random workign set
+
+        # connection.execute(
+        #     """
+        #         SELECT s_sessionID FROM SESSIONS;
+        #     """
+        # )
+
+        # all_session = connection.fetchall()
+
+        # index = 0 
+        # for session in all_session:
+        #     # assign a random number od working set 
+        #     connection.execute(
+        #         f"""
+        #             INSERT INTO Sets (
+        #                 s_weight,
+        #                 s_reps,
+        #                 s_workoutID
+        #             ) 
+        #             VALUES (
+        #                 {random.randrange(2,200)},
+        #                 {random.randrange(1, 30)},
+        #                 1
+        #             ) 
+        #             RETURNING s_setID;
+        #         """
+        #     )
+
+        #     set_id = connection.fetchone()
+        #     connection.execute(
+        #         f"""
+        #             INSERT INTO WorkingSets (
+        #                 ws_setCount,
+        #                 ws_setID
+        #             )
+        #             VALUES (
+        #                 {random.randrange(1,4)},
+        #                 {set_id[0]}
+        #             )
+        #             RETURNING *;
+        #         """
+        #     )
+
+        #     working_set_id = connection.fetchone()
+
+        #     connection.execute(
+        #         f"""
+        #             INSERT INTO Sessions_WorkingSets (
+        #                 sws_sessionID,
+        #                 sws_workingSetID
+        #             ) VALUES (
+        #                 {all_session[index][0]},
+        #                 {working_set_id[0]}
+        #             ) RETURNING *
+        #         """
+        #     )
+            
+    
+       #load in workouts from csv
+        with open('workouts.csv', 'r') as f:
+            connection.copy_from(f, 'workouts', sep='|', columns=[
+                "w_workoutname",
+                "w_mainmusclegroup",
+                "w_minormusclegroup",
+                "w_equipment",
+                "w_description",
+                "w_level",
+                "w_images",
+                "w_isprivate"
+            ])
         connection.db.commit()
         
