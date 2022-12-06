@@ -25,23 +25,24 @@ class ConfigureDB(AppConfig):
     #scraper.getData()
 
     # Drop All Tables - comment the portion below to persist data
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-                DROP TABLE IF EXISTS Plans_Workouts;
-                DROP TABLE IF EXISTS Sessions_SensorData;
-                DROP TABLE IF EXISTS ReportItems;
-                DROP TABLE IF EXISTS Reports;
-                DROP TABLE IF EXISTS SensorData;
-                DROP TABLE IF EXISTS Sessions CASCADE;
-                DROP TABLE IF EXISTS WorkingSets CASCADE;
-                DROP TABLE IF EXISTS Sets;
-                DROP TABLE IF EXISTS Workouts;
-                DROP TABLE IF EXISTS Plans;
-                DROP TABLE IF EXISTS Users;
-            """
-        )
-        cursor.db.commit()
+   # with connection.cursor() as cursor:
+        
+    #    cursor.execute(
+    #        """
+    #            DROP TABLE IF EXISTS Plans_Workouts;
+    #            DROP TABLE IF EXISTS Sessions_SensorData;
+    #            DROP TABLE IF EXISTS ReportItems;
+    #            DROP TABLE IF EXISTS Reports;
+    #            DROP TABLE IF EXISTS SensorData;
+    #            DROP TABLE IF EXISTS Sessions CASCADE;
+    #            DROP TABLE IF EXISTS WorkingSets CASCADE;
+    #            DROP TABLE IF EXISTS Sets;
+    #           DROP TABLE IF EXISTS Workouts;
+    #           DROP TABLE IF EXISTS Plans;
+    #           DROP TABLE IF EXISTS Users;
+    #        """
+    #    )
+    #    cursor.db.commit()
 
 
     # Create All Tables

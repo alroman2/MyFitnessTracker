@@ -2,8 +2,9 @@
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.http import HttpResponse
 
+from django.http import HttpResponse
+import json
 # custom apps 
 from Workouts.apps import *
 from .apps import *
@@ -11,6 +12,96 @@ from django.shortcuts import render
 from django.db import connection
 
 # Create your views here.
+class UserLoginView(APIView):
+    """
+        Attempts to login a user - this method just returns to client wether the user exists
+    """
+    parser_class = [JSONParser]
+    @staticmethod
+    def post(request):
+        email = request.data["email"]
+        print(email)
+        #validate input is an email
+        if '@' not in email:
+            return Response('Not a valid email', status=400)
+
+        #email is valid, execture sql
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                    SELECT * 
+                    FROM users
+                    WHERE u_email = '{email}';
+                """
+            )
+            user = cursor.fetchone()
+
+            #check if user is empty or contains desired user
+
+            if user is None:
+                return Response("User not found", status=400)
+            
+            user_object = {
+                "id": user[0],
+                "image":user[1],
+                "email": user[2],
+                "firstname": user[3],
+                "lastname": user[4]
+
+            }
+            return Response(user_object, status=200)
+
+class UserSignupView(APIView):
+    """
+        Registers a unique user based off email. Emails must be unique
+    """
+    parser_class = [JSONParser]
+    @staticmethod
+    def post(request):
+        email = request.data["email"]
+        firstname = request.data["firstname"]
+        lastname = request.data["lastname"]
+        # check if the email already exists
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                    SELECT COUNT(*) 
+                    FROM users 
+                    WHERE u_email = '{email}'
+                """
+            )
+            
+            does_user_exist = cursor.fetchone()
+            print(does_user_exist[0])
+            if (does_user_exist[0]) > 0:
+                return Response("This email has already been registered", status=400 )
+            
+            cursor.execute(
+                f"""
+                    INSERT INTO Users(
+                        u_email,
+                        u_firstname,
+                        u_lastname
+                    )
+                    VALUES (
+                        '{email}',
+                        '{firstname}',
+                        '{lastname}'
+                    )
+                    RETURNING *;
+                """
+            )
+
+            user = cursor.fetchone()
+            user_object = {
+                "id": user[0],
+                "image":user[1],
+                "email": user[2],
+                "firstname": user[3],
+                "lastname": user[4]
+
+            }
+            return Response(user_object, status=200)
 
 class UserUpdateNameView(APIView):
     """
@@ -86,14 +177,48 @@ class UserUpdateEmailView(APIView):
                     return Response(f"{old_email} User not found " , status=400)
             
             return Response(user, status=200)
-class PlanInsertView(APIView):
+
+class GetPlansByUserView(APIView):
+    """
+        takes in a user id to retrieve plans from
+    """
+    @staticmethod
+    def post(request):
+        userid = request.data["userID"]
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                    SELECT * 
+                    FROM plans
+                    WHERE p_userid = {userid}
+                """
+            )
+            
+            plans = cursor.fetchall()
+            print(plans)
+            plansData = []
+
+            for plan in plans:
+                plansData.append({
+                    "planID": plan[0],
+                    "planName": plan[1],
+                    "userID": plan[2]
+                })
+            print(plansData)
+            return Response(plansData, status=200)
+
+
+class SavePlanView(APIView):
     """
         Add a plan
     """
     @staticmethod
     def post(request):
-            email = request.POST.get('email')
-            plan_name = request.POST.get('plan_name')
+            userid = request.data["userID"]
+            plan = request.data["plan"]
+            planename = plan["name"]
+            workoutIDS = plan["workouts"]
+            #let create a plan and save the plan id to use
             with connection.cursor() as cursor:
                 cursor.execute(
                     f"""
@@ -102,22 +227,38 @@ class PlanInsertView(APIView):
                             p_userID
                         )
                         VALUES (
-                            '{plan_name}',
+                            '{planename}',
                             (
                                 SELECT u_userID 
                                 FROM Users 
-                                WHERE u_email = '{email}'
+                                WHERE u_userID = {userid}
                             )
                         )
                         RETURNING *;
                     """
                 )
+                
+                plan_tuple = cursor.fetchall()
+
+                # add all the workouts to the plan
+                
+                for id in workoutIDS:
+                    cursor.execute(
+                        f"""
+                            INSERT INTO plans_workouts (
+                                pw_planID,
+                                pw_workoutID
+                            ) 
+                            VALUES (
+                                {plan_tuple[0][0]},
+                                {id}
+                            )
+                        """
+                    )
+
                 cursor.db.commit()
-                plan = cursor.fetchall()
-                if len(plan) <= 0:
-                    return Response(f"{email} User not found " , status=400)
             
-            return Response(plan, status=200)
+                return Response(True, status=200)
 
 class PlanAddWorkoutView(APIView):
     """
@@ -337,3 +478,43 @@ class SetAddView(APIView):
             cursor.db.commit()
             return Response(working_set, status=200)
 
+class GetWorkoutsView(APIView):
+    """
+        Returns all workouts
+    """
+    parser_class = [JSONParser]
+    
+    @staticmethod
+    def post(request):
+        limit = request.data["limit"]
+
+        # run sql to get all workouts ordered by workout name
+        with connection.cursor() as cursor:
+            # sql select statement goes below
+            cursor.execute(
+                f"""
+                    SELECT * FROM public.workouts
+                    LIMIT {limit}
+                    
+                """
+            )
+            
+            workouts = cursor.fetchall()
+            workoutsData = []
+
+            for workout in workouts:
+                workoutsData.append(
+                    {
+                        "id" : workout[0],
+                        "name" : workout[1],
+                        "mainMuscleGroup" : workout[2],
+                        "minorMuscleGroup" : workout[3],
+                        "equipment" : workout[4],
+                        "description" : workout[5],
+                        "level": workout[6],
+                        "images": workout[7],
+                        "isPrivate": workout[8]
+                    }
+                )
+            
+            return Response(workoutsData, status=200)
